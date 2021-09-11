@@ -50,7 +50,7 @@ class talk : eosio::contract {
         });
     }
     //add user
-    [[eosio::action]] void enroll(uint64_t id,string name, string county, int nationalid){
+    [[eosio::action]] void enroll(uint64_t id,string name, string county, int nationalid, string constituency, string role, string ward){
     
     // Create a record in the table if the voter does not exist
      users_table _users{get_self(),0};
@@ -63,19 +63,38 @@ class talk : eosio::contract {
             rows.name = name;
             rows.county= county;
             rows.nationalid     = nationalid;
-            // rows.constituency  = constituency;
-            // rows.ward = ward;
-            // rows.role=role;
+            rows.constituency  = constituency;
+            rows.ward = ward;
+            rows.role=role;
            
 
         });
 
+    }
+    // cast vote
+    [[eosio::action]] void vote(uint64_t id,eosio::name user,string president, string governor, string womanrep){
+    // Create a record in the table if the vote does not exist
+     votes_table _votes{get_self(),0};
+
+       // Check user
+        require_auth(user);
+
+        // Check reply_to exists
+        if (id)
+            _votes.get(id);
+        _votes.emplace(get_self(), [&](auto& rows){
+            rows.president = president;
+            rows.governor = governor;
+            rows.womanrep = womanrep;
+        });
+            
     }
     
  private:
      struct [[eosio::table]] users_struct
     {
     uint64_t    id       = {};
+
     string name;
     string county;
     int nationalid;
@@ -88,5 +107,18 @@ class talk : eosio::contract {
      };
 
     typedef eosio::multi_index<"users"_n, users_struct> users_table;
+//votes table
+    struct [[eosio::table]] votes_struct
+    {
+    uint64_t    id       = {};
+     eosio::name user     = {};
+     string president;
+     string womanrep;
+     string governor;
+   
+    uint64_t primary_key() const { return id; }
+     };
+
+    typedef eosio::multi_index<"votes"_n, votes_struct> votes_table;
 
 };
