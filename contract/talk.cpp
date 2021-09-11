@@ -1,5 +1,10 @@
 #include <eosio/eosio.hpp>
 
+
+using namespace eosio;
+using namespace std;
+
+
 // Message table
 struct [[eosio::table("message"), eosio::contract("talk")]] message {
     uint64_t    id       = {}; // Non-0
@@ -44,4 +49,37 @@ class talk : eosio::contract {
             message.content  = content;
         });
     }
+    //add user
+    // [[eosio::action]] void enroll(name user,name name, string county, string constituency,string ward, string role, string fingerprint, int nationalid){
+    //         // Ensure this action is authorized by the player
+    // // require_auth(user);
+
+    // // Create a record in the table if the player doesn't exist in our app yet
+    //  users_table _users{get_self(),0};
+    //  _users.emplace(get_self(), [&](auto& rows) {
+    //         rows.name      = name;
+    //         rows.county= county;
+    //         rows.nationalid     = nationalid;
+    //         rows.constituency  = constituency;
+    //     });
+
+    // }
+    
+ private:
+     struct [[eosio::table]] users_struct
+    {
+    name name;
+    string county;
+    int nationalid;
+    string constituency;
+    string ward;
+    string role;
+    string fingerprint;
+    uint16_t reward_points = 0;
+
+    uint64_t primary_key() const { return name.value; }
+     };
+
+    typedef eosio::multi_index<"users"_n, users_struct> users_table;
+
 };
