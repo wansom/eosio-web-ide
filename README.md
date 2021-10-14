@@ -28,7 +28,7 @@ To open a terminal, use the Terminal drop-down menu in the IDE user interface.
 
 ## Building sample contract
 
-The source code for the sample smartcontract is at `contract/talk.cpp` within the IDE. To compile the contract, run this in a terminal:
+ To compile the contract, run this in a terminal:
 
 ```
 eosio-cpp contract/talk.cpp
