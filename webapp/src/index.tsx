@@ -182,7 +182,7 @@ class EnrollForm extends React.Component<{}, EnrollFormState> {
       privateKey: "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3",
       data: {
         id: 0,
-        name: "warren",
+        name: "bob",
         county: "homabay",
         nationalid: 35274575,
         constituency: "homabay",
@@ -233,7 +233,7 @@ class EnrollForm extends React.Component<{}, EnrollFormState> {
   render() {
     return (
       <div>
-        <p>Voting Form</p>
+        <p>Register Form</p>
         <table>
           <tbody>
             <tr>
@@ -326,7 +326,127 @@ class EnrollForm extends React.Component<{}, EnrollFormState> {
   }
 }
 // voting form component
-class VotingForm extends React.Component<{}, VotingFormState> {}
+class VotingForm extends React.Component<{}, PostFormState> {
+  api: Api;
+
+  constructor(props: {}) {
+    super(props);
+    this.api = new Api({ rpc, signatureProvider: new JsSignatureProvider([]) });
+    this.state = {
+      privateKey: "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3",
+      data: {
+        id: 0,
+        user: "bob",
+        reply_to: 0,
+        content: "This is a test",
+      },
+      error: "",
+    };
+  }
+
+  setData(data: PostData) {
+    this.setState({ data: { ...this.state.data, ...data } });
+  }
+
+  async post() {
+    try {
+      this.api.signatureProvider = new JsSignatureProvider([
+        this.state.privateKey,
+      ]);
+      const result = await this.api.transact(
+        {
+          actions: [
+            {
+              account: "talk",
+              name: "post",
+              authorization: [
+                {
+                  actor: this.state.data.user,
+                  permission: "active",
+                },
+              ],
+              data: this.state.data,
+            },
+          ],
+        },
+        {
+          blocksBehind: 3,
+          expireSeconds: 30,
+        }
+      );
+      console.log(result);
+      this.setState({ error: "" });
+    } catch (e) {
+      if (e.json) this.setState({ error: JSON.stringify(e.json, null, 4) });
+      else this.setState({ error: "" + e });
+    }
+  }
+
+  render() {
+    return (
+      <div>
+        <table>
+          <tbody>
+            <tr>
+              <td>Private Key</td>
+              <td>
+                <input
+                  style={{ width: 500 }}
+                  value={this.state.privateKey}
+                  onChange={(e) =>
+                    this.setState({ privateKey: e.target.value })
+                  }
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>User</td>
+              <td>
+                <input
+                  style={{ width: 500 }}
+                  value={this.state.data.user}
+                  onChange={(e) => this.setData({ user: e.target.value })}
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>Reply To</td>
+              <td>
+                <input
+                  style={{ width: 500 }}
+                  value={this.state.data.reply_to}
+                  onChange={(e) => this.setData({ reply_to: +e.target.value })}
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>Content</td>
+              <td>
+                <input
+                  style={{ width: 500 }}
+                  value={this.state.data.content}
+                  onChange={(e) => this.setData({ content: e.target.value })}
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <br />
+        <button onClick={(e) => this.post()}>Post</button>
+        {this.state.error && (
+          <div>
+            <br />
+            Error:
+            <code>
+              <pre>{this.state.error}</pre>
+            </code>
+          </div>
+        )}
+      </div>
+    );
+  }
+}
+
 
 class Messages extends React.Component<{}, { content: string }> {
   interval: number;
@@ -380,7 +500,10 @@ class Messages extends React.Component<{}, { content: string }> {
 
 ReactDOM.render(
   <div>
+    <PostForm/>
+    <br />
     <EnrollForm/>
+    <VotingForm/>
   </div>,
   document.getElementById("example")
 );
