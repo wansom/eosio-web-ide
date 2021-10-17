@@ -19,6 +19,24 @@ struct [[eosio::table("message"), eosio::contract("talk")]] message {
 using message_table = eosio::multi_index<
     "message"_n, message, eosio::indexed_by<"by.reply.to"_n, eosio::const_mem_fun<message, uint64_t, &message::get_reply_to>>>;
 
+    // voters new table
+struct [[eosio::table("voters"), eosio::contract("talk")]] voters {
+    uint64_t    id       = {}; // Non-0
+    uint64_t    reply_to = {}; // Non-0 if this is a reply
+    eosio::name user     = {};
+    string county ={};
+    int nationalid={};
+    string constituency={};
+    string ward={};
+    string role={};
+
+    uint64_t primary_key() const { return id; }
+    uint64_t get_reply_to() const { return reply_to; }
+};
+
+using voters_table = eosio::multi_index<
+    "voters"_n, voters, eosio::indexed_by<"by.reply.to"_n, eosio::const_mem_fun<voters, uint64_t, &voters::get_reply_to>>>;
+
 // The contract
 class talk : eosio::contract {
   public:
@@ -50,22 +68,22 @@ class talk : eosio::contract {
         });
     }
     //add user
-    [[eosio::action]] void enroll(uint64_t id,string name, string county, int nationalid, string constituency, string role, string ward){
+    [[eosio::action]] void enroll(uint64_t id,eosio::name user, string county, int nationalid, string constituency, string role, string ward){
     
-    // Create a record in the table if the voter does not exist
-     users_table _users{get_self(),0};
+    // Create a record in the table if the voter does not exist.
+     voters_table table{get_self(),0};
              // Create an ID if user didn't specify one
     eosio::check(id < 1'000'000'000ull, "user-specified id is too big");
     if (!id)
-        id = std::max(_users.available_primary_key(), 1'000'000'000ull);
-     _users.emplace(get_self(), [&](auto& rows) {
-            rows.id  =id;
-            rows.name = name;
-            rows.county= county;
-            rows.nationalid     = nationalid;
-            rows.constituency  = constituency;
-            rows.ward = ward;
-            rows.role=role;
+        id = std::max(table.available_primary_key(), 1'000'000'000ull);
+     table.emplace(get_self(), [&](auto& voters) {
+            voters.id  =id;
+            voters.user = user;
+            voters.county= county;
+            voters.nationalid     = nationalid;
+            voters.constituency  = constituency;
+            voters.ward = ward;
+            voters.role=role;
            
 
         });
@@ -90,7 +108,7 @@ class talk : eosio::contract {
             
     }
     
- private:
+ public:
      struct [[eosio::table]] users_struct
     {
     uint64_t    id       = {};
