@@ -19,7 +19,7 @@ struct [[eosio::table("message"), eosio::contract("talk")]] message {
 using message_table = eosio::multi_index<
     "message"_n, message, eosio::indexed_by<"by.reply.to"_n, eosio::const_mem_fun<message, uint64_t, &message::get_reply_to>>>;
 
-    // voters new table
+    // users table
 struct [[eosio::table("voters"), eosio::contract("talk")]] voters {
     uint64_t    id       = {}; // Non-0
     uint64_t    reply_to = {}; // Non-0 if this is a reply
@@ -36,6 +36,21 @@ struct [[eosio::table("voters"), eosio::contract("talk")]] voters {
 
 using voters_table = eosio::multi_index<
     "voters"_n, voters, eosio::indexed_by<"by.reply.to"_n, eosio::const_mem_fun<voters, uint64_t, &voters::get_reply_to>>>;
+// votes table
+struct [[eosio::table("votes"), eosio::contract("talk")]] votes {
+    uint64_t    id       = {}; // Non-0
+    uint64_t    reply_to = {}; // Non-0 if this is a reply
+    eosio::name user     = {};
+    string president ={};
+     string womanrep ={};
+     string governor ={};
+
+    uint64_t primary_key() const { return id; }
+    uint64_t get_reply_to() const { return reply_to; }
+};
+
+using votes_table = eosio::multi_index<
+    "votes"_n, votes, eosio::indexed_by<"by.reply.to"_n, eosio::const_mem_fun<votes, uint64_t, &votes::get_reply_to>>>;
 
 // The contract
 class talk : eosio::contract {
@@ -92,15 +107,15 @@ class talk : eosio::contract {
     // cast vote
     [[eosio::action]] void vote(uint64_t id,eosio::name user,string president, string governor, string womanrep){
     // Create a record in the table if the vote does not exist
-     votes_table _votes{get_self(),0};
+     votes_table table{get_self(),0};
 
        // Check user
         require_auth(user);
 
         // Check reply_to exists
         if (id)
-            _votes.get(id);
-        _votes.emplace(get_self(), [&](auto& rows){
+            table.get(id);
+        table.emplace(get_self(), [&](auto& rows){
             rows.president = president;
             rows.governor = governor;
             rows.womanrep = womanrep;

@@ -17,7 +17,7 @@ interface PostData {
 // enrollment data
 interface enrollData {
   id?: number;
-  name?: string;
+  user?: string;
   county?: string;
   nationalid?: number;
   constituency?: string;
@@ -182,7 +182,7 @@ class EnrollForm extends React.Component<{}, EnrollFormState> {
       privateKey: "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3",
       data: {
         id: 0,
-        name: "bob",
+        user: "bob",
         county: "homabay",
         nationalid: 35274575,
         constituency: "homabay",
@@ -209,7 +209,7 @@ class EnrollForm extends React.Component<{}, EnrollFormState> {
               name: "enroll",
               authorization: [
                 {
-                  actor: this.state.data.name,
+                  actor: this.state.data.user,
                   permission: "active",
                 },
               ],
@@ -233,7 +233,7 @@ class EnrollForm extends React.Component<{}, EnrollFormState> {
   render() {
     return (
       <div>
-        <p>Register Form</p>
+        <p>Registration Form</p>
         <table>
           <tbody>
             <tr>
@@ -253,8 +253,8 @@ class EnrollForm extends React.Component<{}, EnrollFormState> {
               <td>
                 <input
                   style={{ width: 500 }}
-                  value={this.state.data.name}
-                  onChange={(e) => this.setData({ name: e.target.value })}
+                  value={this.state.data.user}
+                  onChange={(e) => this.setData({ user: e.target.value })}
                 />
               </td>
             </tr>
@@ -326,25 +326,26 @@ class EnrollForm extends React.Component<{}, EnrollFormState> {
   }
 }
 // voting form component
-class VotingForm extends React.Component<{}, PostFormState> {
+class VotingForm extends React.Component<{}, VotingFormState> {
   api: Api;
 
   constructor(props: {}) {
     super(props);
     this.api = new Api({ rpc, signatureProvider: new JsSignatureProvider([]) });
     this.state = {
-      privateKey: "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3",
+      privateKey: "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
       data: {
         id: 0,
         user: "bob",
-        reply_to: 0,
-        content: "This is a test",
+       president: "Ruto",
+        governor: "miguna",
+        womanrep:"waiguru"
       },
       error: "",
     };
   }
 
-  setData(data: PostData) {
+  setData(data: VotingData) {
     this.setState({ data: { ...this.state.data, ...data } });
   }
 
@@ -358,7 +359,7 @@ class VotingForm extends React.Component<{}, PostFormState> {
           actions: [
             {
               account: "talk",
-              name: "post",
+              name: "vote",
               authorization: [
                 {
                   actor: this.state.data.user,
@@ -385,6 +386,9 @@ class VotingForm extends React.Component<{}, PostFormState> {
   render() {
     return (
       <div>
+        <p>Voting form</p>
+        <br />
+
         <table>
           <tbody>
             <tr>
@@ -400,7 +404,7 @@ class VotingForm extends React.Component<{}, PostFormState> {
               </td>
             </tr>
             <tr>
-              <td>User</td>
+              <td>Voter name</td>
               <td>
                 <input
                   style={{ width: 500 }}
@@ -409,30 +413,41 @@ class VotingForm extends React.Component<{}, PostFormState> {
                 />
               </td>
             </tr>
+          
             <tr>
-              <td>Reply To</td>
+              <td>President</td>
               <td>
                 <input
                   style={{ width: 500 }}
-                  value={this.state.data.reply_to}
-                  onChange={(e) => this.setData({ reply_to: +e.target.value })}
+                  value={this.state.data.president}
+                  onChange={(e) => this.setData({ president: e.target.value })}
                 />
               </td>
             </tr>
             <tr>
-              <td>Content</td>
+              <td>Governor</td>
               <td>
                 <input
                   style={{ width: 500 }}
-                  value={this.state.data.content}
-                  onChange={(e) => this.setData({ content: e.target.value })}
+                  value={this.state.data.governor}
+                  onChange={(e) => this.setData({ governor: e.target.value })}
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>Women Rep</td>
+              <td>
+                <input
+                  style={{ width: 500 }}
+                  value={this.state.data.womanrep}
+                  onChange={(e) => this.setData({ womanrep: e.target.value })}
                 />
               </td>
             </tr>
           </tbody>
         </table>
         <br />
-        <button onClick={(e) => this.post()}>Post</button>
+        <button onClick={(e) => this.post()}>Vote</button>
         {this.state.error && (
           <div>
             <br />
@@ -463,19 +478,21 @@ class Messages extends React.Component<{}, { content: string }> {
           json: true,
           code: "talk",
           scope: "",
-          table: "message",
+          table: "voters",
           limit: 1000,
         });
         let content =
-          "id          reply_to      user          content\n" +
+          "id         username    county    constituenty   ward   role\n" +
           "=============================================================\n";
         for (let row of rows.rows)
           content +=
             (row.id + "").padEnd(12) +
-            (row.reply_to + "").padEnd(12) +
+            (row.user + "").padEnd(8) +
             "  " +
-            row.user.padEnd(14) +
-            row.content +
+            row.county.padEnd(12) +
+            row.constituency.padEnd(12) +
+            row.ward.padEnd(10) +
+            row.role +
             "\n";
         this.setState({ content });
       } catch (e) {
@@ -500,10 +517,11 @@ class Messages extends React.Component<{}, { content: string }> {
 
 ReactDOM.render(
   <div>
-    <PostForm/>
-    <br />
+    
     <EnrollForm/>
+    <br />
     <VotingForm/>
+    <Messages/>
   </div>,
   document.getElementById("example")
 );
