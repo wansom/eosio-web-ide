@@ -69,15 +69,32 @@ struct [[eosio::table("votes"), eosio::contract("talk")]] votes {
      string station = {};
      string total = {};
 
-
-
     uint64_t primary_key() const { return id; }
     uint64_t get_reply_to() const { return reply_to; }
 };
 
 using votes_table = eosio::multi_index<
     "votes"_n, votes, eosio::indexed_by<"by.reply.to"_n, eosio::const_mem_fun<votes, uint64_t, &votes::get_reply_to>>>;
+// votes records 
+struct [[eosio::table("records"), eosio::contract("talk")]] records {
+    uint64_t    id       = {}; // Non-0
+    uint64_t    reply_to = {}; // Non-0 if this is a reply
+    eosio::name user     = {};
+      string president ={};
+     string womanrep ={};
+     string governor ={};
+     string mp ={};
+     string mca={};
+     string senator = {};
+     string station = {};
+     string total = {};
 
+    uint64_t primary_key() const { return id; }
+    uint64_t get_reply_to() const { return reply_to; }
+};
+
+using records_table = eosio::multi_index<
+    "records"_n, records, eosio::indexed_by<"by.reply.to"_n, eosio::const_mem_fun<records, uint64_t, &records::get_reply_to>>>;
 // The contract
 class talk : eosio::contract {
   public:
@@ -157,7 +174,7 @@ class talk : eosio::contract {
     // cast vote
     [[eosio::action]] void vote(uint64_t id,eosio::name user,string president, string governor, string womanrep,string mp, string senator,string mca){
     // Create a record in the table if the vote does not exist
-     votes_table table{get_self(),0};
+     records_table table{get_self(),0};
 
        // Check user
        // require_auth(user);
