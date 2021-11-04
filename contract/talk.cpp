@@ -37,6 +37,24 @@ struct [[eosio::table("voters"), eosio::contract("talk")]] voters {
 
 using voters_table = eosio::multi_index<
     "voters"_n, voters, eosio::indexed_by<"by.reply.to"_n, eosio::const_mem_fun<voters, uint64_t, &voters::get_reply_to>>>;
+        // candidates table
+struct [[eosio::table("candidates"), eosio::contract("talk")]] candidates {
+    uint64_t    id       = {}; // Non-0
+    uint64_t    reply_to = {}; // Non-0 if this is a reply
+    eosio::name user     = {};
+    string dob ={};
+    string username ={};
+    string county ={};
+    string constituency={};
+    string ward={};
+    string position={};
+
+    uint64_t primary_key() const { return id; }
+    uint64_t get_reply_to() const { return reply_to; }
+};
+
+using candidates_table = eosio::multi_index<
+    "candidates"_n, candidates, eosio::indexed_by<"by.reply.to"_n, eosio::const_mem_fun<candidates, uint64_t, &candidates::get_reply_to>>>;
 // votes table
 struct [[eosio::table("votes"), eosio::contract("talk")]] votes {
     uint64_t    id       = {}; // Non-0
@@ -108,6 +126,29 @@ class talk : eosio::contract {
             voters.constituency  = constituency;
             voters.ward = ward;
             voters.role=role;
+           
+
+        });
+
+    }
+        //add user
+    [[eosio::action]] void addcandidate(uint64_t id,eosio::name user, string county, string dob,string username, string constituency, string position, string ward){
+    
+    // Create a record in the table if the voter does not exist.
+     candidates_table table{get_self(),0};
+             // Create an ID if user didn't specify one
+    eosio::check(id < 1'000'000'000ull, "user-specified id is too big");
+    if (!id)
+        id = std::max(table.available_primary_key(), 1'000'000'000ull);
+     table.emplace(get_self(), [&](auto& candidates) {
+            candidates.id  =id;
+            candidates.user = user;
+            candidates.county= county;
+            candidates.dob     = dob;
+            candidates.username = username;
+            candidates.constituency  = constituency;
+            candidates.ward = ward;
+            candidates.position=position;
            
 
         });
